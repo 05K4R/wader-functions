@@ -48,10 +48,6 @@ function getCategory(track, development, uid) {
     });
 }
 
-function getLabels(track) {
-    return ['test', 'label2'];
-}
-
 function getAllRepostedAndUploadedTracks(profileId, uid, development) {
     const allTracks = [];
     return getUserCollection(development).doc(uid).collection('reposts').where('reposter.id', '==', profileId).get().then(documents => {
