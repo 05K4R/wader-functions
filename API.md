@@ -7,7 +7,6 @@ Returns all category and label ratios for tracks uploaded by a specific profile.
 
 ### Arguments
 `profileId (String)` - The ID of the profile to receive ratios for.
-`development (Boolean)` - If the client is in development mode, hence should not use production data.
 
 ### Response
 ```

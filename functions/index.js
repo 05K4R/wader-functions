@@ -6,12 +6,11 @@ admin.initializeApp();
 exports.getGroupRatios = functions.https.onCall((data, context) => {
     const uid = context.auth.uid;
     const profileId = data.profileId;
-    const development = data.development;
 
     const categoryTotals = {};
     const labelTotals = {};
 
-    return getAllRepostedAndUploadedTracks(profileId, uid, development).then(tracks => {
+    return getAllRepostedAndUploadedTracks(profileId, uid).then(tracks => {
         for (const track of tracks) {
             const category = track.category;
             if (!category) {
@@ -41,21 +40,21 @@ exports.getGroupRatios = functions.https.onCall((data, context) => {
     });
 });
 
-function getCategory(track, development, uid) {
-    return getUserCollection(development).doc(uid).collection('tracks').doc(track.id).get().then(document => {
+function getCategory(track, uid) {
+    return getUserCollection().doc(uid).collection('tracks').doc(track.id).get().then(document => {
         const realTrack = document.data();
         return realTrack.category;
     });
 }
 
-function getAllRepostedAndUploadedTracks(profileId, uid, development) {
+function getAllRepostedAndUploadedTracks(profileId, uid) {
     const allTracks = [];
-    return getUserCollection(development).doc(uid).collection('reposts').where('reposter.id', '==', profileId).get().then(documents => {
+    return getUserCollection().doc(uid).collection('reposts').where('reposter.id', '==', profileId).get().then(documents => {
         documents.forEach(doc => {
             const repost = doc.data();
             allTracks.push(repost.track);
         });
-        return getUserCollection(development).doc(uid).collection('tracks').where('uploader.id', '==', profileId).get();
+        return getUserCollection().doc(uid).collection('tracks').where('uploader.id', '==', profileId).get();
     }).then(documents => {
         documents.forEach(doc => {
             allTracks.push(doc.data());
@@ -64,10 +63,6 @@ function getAllRepostedAndUploadedTracks(profileId, uid, development) {
     });
 }
 
-function getUserCollection(development) {
-    if (development) {
-        return admin.firestore().collection('devusers');
-    } else {
-        return admin.firestore().collection('users');
-    }
+function getUserCollection() {
+    return admin.firestore().collection('users');
 }
