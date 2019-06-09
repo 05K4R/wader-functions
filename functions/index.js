@@ -3,6 +3,14 @@ const admin = require('firebase-admin');
 
 admin.initializeApp();
 
+exports.updateProfile = functions.https.onCall((data, context) => {
+    const uid = context.auth.uid;
+    const profileId = data.profileId;
+    const profileInfo = data.profileInfo;
+
+    return updateProfile(uid, profileId, profileInfo);
+});
+
 exports.getGroupRatios = functions.https.onCall((data, context) => {
     const uid = context.auth.uid;
     const profileId = data.profileId;
@@ -39,6 +47,41 @@ exports.getGroupRatios = functions.https.onCall((data, context) => {
         }
     });
 });
+
+async function updateProfile(uid, profileId, profileInfo) {
+    const profile = await getProfile(uid, profileId);
+
+    if (typeof profileInfo.url === 'string') {
+        profile.url = profileInfo.url;
+    }
+
+    if (typeof profileInfo.name === 'string') {
+        profile.name = profileInfo.name;
+    }
+
+    const options = {
+        merge: true
+    }
+
+    return getUserCollection().doc(uid).collection('profiles').doc(profileId).set(profile, options);
+}
+
+async function getProfile(uid, profileId) {
+    if (typeof profileId !== 'string') {
+        return Promise.reject(new Error('profile ID must be a string'));
+    }
+
+    const profileDocument = await (getUserCollection().doc(uid).collection('profiles').doc(profileId).get());
+    let profile = profileDocument.data();
+
+    if (profile === undefined) {
+        profile = {
+            id: profileId
+        }
+    }
+
+    return profile;
+}
 
 function getCategory(track, uid) {
     return getUserCollection().doc(uid).collection('tracks').doc(track.id).get().then(document => {
