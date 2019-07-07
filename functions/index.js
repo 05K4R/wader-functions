@@ -53,7 +53,8 @@ async function updateTrack(uid, trackInfo) {
     let track = await getTrack(uid, trackId);
     if (track === undefined) {
         track = {
-            url: trackInfo.url
+            url: trackInfo.url,
+            uploader: trackInfo.uploaderInfo.url
         }
     }
 
