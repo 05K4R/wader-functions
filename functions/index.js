@@ -5,54 +5,30 @@ admin.initializeApp();
 
 exports.updateProfile = functions.https.onCall((data, context) => {
     const uid = context.auth.uid;
-    const profileId = data.profileId;
     const profileInfo = data.profileInfo;
 
-    return updateProfile(uid, profileId, profileInfo);
+    return updateProfile(uid, profileInfo);
 });
 
-exports.getGroupRatios = functions.https.onCall((data, context) => {
+exports.updateTrack = functions.https.onCall((data, context) => {
     const uid = context.auth.uid;
-    const profileId = data.profileId;
+    const trackInfo = data.trackInfo;
 
-    const categoryTotals = {};
-    const labelTotals = {};
-
-    return getAllRepostedAndUploadedTracks(profileId, uid).then(tracks => {
-        for (const track of tracks) {
-            const category = track.category;
-            if (!category) {
-                continue;
-            }
-
-            if (categoryTotals[category.name] === undefined) {
-                categoryTotals[category.name] = 0;
-            }
-            categoryTotals[category.name] += 1;
-        }
-
-        for (const track of tracks) {
-            const labels = track.labels;
-            for (const label of labels) {
-                if (labelTotals[label.name] === undefined) {
-                    labelTotals[label.name] = 0;
-                }
-                labelTotals[label.name] += 1;
-            }
-        }
-
-        return {
-            labels: labelTotals,
-            categories: categoryTotals
-        }
-    });
+    return updateTrack(uid, trackInfo);
 });
 
-async function updateProfile(uid, profileId, profileInfo) {
-    const profile = await getProfile(uid, profileId);
+async function updateProfile(uid, profileInfo) {
+    if (typeof profileInfo.url !== 'string') {
+        return Promise.reject(new Error('profile url must be a string'));
+    }
 
-    if (typeof profileInfo.url === 'string') {
-        profile.url = profileInfo.url;
+    const profileId = profileInfo.url;
+
+    let profile = await getProfile(uid, profileId);
+    if (profile === undefined) {
+        profile = {
+            url: profileInfo.url
+        }
     }
 
     if (typeof profileInfo.name === 'string') {
@@ -66,44 +42,40 @@ async function updateProfile(uid, profileId, profileInfo) {
     return getUserCollection().doc(uid).collection('profiles').doc(profileId).set(profile, options);
 }
 
-async function getProfile(uid, profileId) {
-    if (typeof profileId !== 'string') {
-        return Promise.reject(new Error('profile ID must be a string'));
+async function updateTrack(uid, trackInfo) {
+    if (typeof trackInfo.url !== 'string') {
+        return Promise.reject(new Error('track url must be a string'));
     }
 
-    const profileDocument = await (getUserCollection().doc(uid).collection('profiles').doc(profileId).get());
-    let profile = profileDocument.data();
+    await updateProfile(uid, trackInfo.uploaderInfo);
+    const trackId = trackInfo.uploaderInfo.url + ';' + trackInfo.url;
 
-    if (profile === undefined) {
-        profile = {
-            id: profileId
+    let track = await getTrack(uid, trackId);
+    if (track === undefined) {
+        track = {
+            url: trackInfo.url
         }
     }
 
-    return profile;
+    if (typeof trackInfo.name === 'string') {
+        track.name = trackInfo.name;
+    }
+
+    const options = {
+        merge: true
+    }
+
+    return getUserCollection().doc(uid).collection('tracks').doc(trackId).set(track, options);
 }
 
-function getCategory(track, uid) {
-    return getUserCollection().doc(uid).collection('tracks').doc(track.id).get().then(document => {
-        const realTrack = document.data();
-        return realTrack.category;
-    });
+async function getProfile(uid, profileId) {
+    const profileDocument = await (getUserCollection().doc(uid).collection('profiles').doc(profileId).get());
+    return profileDocument.data();
 }
 
-function getAllRepostedAndUploadedTracks(profileId, uid) {
-    const allTracks = [];
-    return getUserCollection().doc(uid).collection('reposts').where('reposter.id', '==', profileId).get().then(documents => {
-        documents.forEach(doc => {
-            const repost = doc.data();
-            allTracks.push(repost.track);
-        });
-        return getUserCollection().doc(uid).collection('tracks').where('uploader.id', '==', profileId).get();
-    }).then(documents => {
-        documents.forEach(doc => {
-            allTracks.push(doc.data());
-        });
-        return allTracks;
-    });
+async function getTrack(uid, trackId) {
+    const trackDocument = await(getUserCollection().doc(uid).collection('tracks').doc(trackId).get());
+    return trackDocument.data();
 }
 
 function getUserCollection() {
