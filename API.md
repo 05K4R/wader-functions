@@ -25,3 +25,21 @@ trackInfo: Object
         url: String
         name: String (optional)
 ```
+
+## updateRepost
+Update a repost, or create it if it doesn't exist. Also updates or creates the corresponding track and reposter profile.
+
+### Input
+```
+repostInfo: Object
+    time: number, Unix timestamp in seconds
+    reposterInfo: Object
+        url: String
+        name: String (optional)
+    trackInfo: Object
+        url: String
+        name: String (optional)
+        uploaderInfo: Object
+            url: String
+            name: String (optional)
+```
