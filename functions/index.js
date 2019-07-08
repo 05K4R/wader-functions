@@ -29,13 +29,11 @@ async function updateProfile(uid, profileInfo) {
         return Promise.reject(new Error('profile url must be a string'));
     }
 
-    const profileId = profileInfo.url;
+    const profileId = getProfileId(profileInfo);
 
-    let profile = await getProfile(uid, profileId);
+    let profile = await fetchProfile(uid, profileId);
     if (profile === undefined) {
-        profile = {
-            url: profileInfo.url
-        }
+        profile = createProfile(profileInfo);
     }
 
     if (typeof profileInfo.name === 'string') {
@@ -46,7 +44,7 @@ async function updateProfile(uid, profileInfo) {
         merge: true
     }
 
-    return getUserCollection().doc(uid).collection('profiles').doc(profileId).set(profile, options);
+    return profileCollection(uid).doc(profileId).set(profile, options);
 }
 
 async function updateTrack(uid, trackInfo) {
@@ -55,14 +53,12 @@ async function updateTrack(uid, trackInfo) {
     }
 
     await updateProfile(uid, trackInfo.uploaderInfo);
-    const trackId = trackInfo.uploaderInfo.url + ';' + trackInfo.url;
 
-    let track = await getTrack(uid, trackId);
+    const trackId = getTrackId(trackInfo)
+
+    let track = await fetchTrack(uid, trackId);
     if (track === undefined) {
-        track = {
-            url: trackInfo.url,
-            uploader: trackInfo.uploaderInfo.url
-        }
+        track = createTrack(trackInfo)
     }
 
     if (typeof trackInfo.name === 'string') {
@@ -73,47 +69,90 @@ async function updateTrack(uid, trackInfo) {
         merge: true
     }
 
-    return getUserCollection().doc(uid).collection('tracks').doc(trackId).set(track, options);
+    return trackCollection(uid).doc(trackId).set(track, options);
 }
 
 async function updateRepost(uid, repostInfo) {
     if (typeof repostInfo.time !== 'number') {
-        return Promise.reject(new Error('repost time must be an integer'));
+        return Promise.reject(new Error('repost time must be a number'));
     }
 
     await updateProfile(uid, repostInfo.reposterInfo);
     await updateTrack(uid, repostInfo.trackInfo);
-    const reposterId = repostInfo.reposterInfo.url;
-    const trackId = repostInfo.trackInfo.uploaderInfo.url + ';' + repostInfo.trackInfo.url;
-    const repostId = reposterId + ';' + repostInfo.time + ';' + trackId;
 
-    let repost = await getRepost(uid, repostId);
+    const repostId = getRepostId(repostInfo)
+
+    let repost = await fetchRepost(uid, repostId);
     if (repost === undefined) {
-        repost = {
-            time: repostInfo.time,
-            track: trackId,
-            reposter: reposterId
-        }
+        repost = createRepost(repostInfo);
     }
 
-    return getUserCollection().doc(uid).collection('reposts').doc(repostId).set(repost);
+    return repostCollection(uid).doc(repostId).set(repost);
 }
 
-async function getProfile(uid, profileId) {
-    const profileDocument = await (getUserCollection().doc(uid).collection('profiles').doc(profileId).get());
+function getProfileId(profileInfo) {
+    return profileInfo.url;
+}
+
+function getTrackId(trackInfo) {
+    return trackInfo.uploaderInfo.url + ';' + trackInfo.url;
+}
+
+function getRepostId(repostInfo) {
+    const reposterId = getProfileId(repostInfo.reposterInfo);
+    const trackId = getTrackId(repostInfo.trackInfo);
+
+    return reposterId + ';' + repostInfo.time + ';' + trackId;
+}
+
+function createProfile(profileInfo) {
+    return {
+        url: profileInfo.url
+    };
+}
+
+function createTrack(trackInfo) {
+    return {
+        url: trackInfo.url,
+        uploader: getProfileId(trackInfo.uploaderInfo)
+    };
+}
+
+function createRepost(repostInfo) {
+    return {
+        time: repostInfo.time,
+        track: getTrackId(repostInfo.trackInfo),
+        reposter: getProfileId(repostInfo.reposterInfo)
+    };
+}
+
+async function fetchProfile(uid, profileId) {
+    const profileDocument = await (profileCollection(uid).doc(profileId).get());
     return profileDocument.data();
 }
 
-async function getTrack(uid, trackId) {
-    const trackDocument = await (getUserCollection().doc(uid).collection('tracks').doc(trackId).get());
+async function fetchTrack(uid, trackId) {
+    const trackDocument = await (trackCollection(uid).doc(trackId).get());
     return trackDocument.data();
 }
 
-async function getRepost(uid, repostId) {
-    const repostDocument = await (getUserCollection().doc(uid).collection('reposts').doc(repostId).get());
+async function fetchRepost(uid, repostId) {
+    const repostDocument = await (repostCollection(uid).doc(repostId).get());
     return repostDocument.data();
 }
 
-function getUserCollection() {
+function profileCollection(uid) {
+    return userCollection().doc(uid).collection('profiles');
+}
+
+function trackCollection(uid) {
+    return userCollection().doc(uid).collection('tracks');
+}
+
+function repostCollection(uid) {
+    return userCollection().doc(uid).collection('reposts');
+}
+
+function userCollection() {
     return admin.firestore().collection('users');
 }
