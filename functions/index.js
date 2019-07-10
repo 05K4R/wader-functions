@@ -7,28 +7,36 @@ exports.updateProfile = functions.https.onCall((data, context) => {
     const uid = context.auth.uid;
     const profileInfo = data.profileInfo;
 
-    return updateProfile(uid, profileInfo);
+    if (isValidProfileInfo(profileInfo)) {
+        return updateProfile(uid, profileInfo);
+    } else {
+        return Promise.reject(new Error('invalid profileInfo'));
+    }
 });
 
 exports.updateTrack = functions.https.onCall((data, context) => {
     const uid = context.auth.uid;
     const trackInfo = data.trackInfo;
 
-    return updateTrack(uid, trackInfo);
+    if (isValidTrackInfo(trackInfo)) {
+        return updateTrack(uid, trackInfo);
+    } else {
+        return Promise.reject(new Error('invalid trackInfo'));
+    }
 });
 
 exports.updateRepost = functions.https.onCall((data, context) => {
     const uid = context.auth.uid;
     const repostInfo = data.repostInfo;
 
-    return updateRepost(uid, repostInfo);
+    if (isValidRepostInfo(repostInfo)) {
+        return updateRepost(uid, repostInfo);
+    } else {
+        return Promise.reject(new Error('invalid repostInfo'));
+    }
 });
 
 async function updateProfile(uid, profileInfo) {
-    if (typeof profileInfo.url !== 'string') {
-        return Promise.reject(new Error('profile url must be a string'));
-    }
-
     const profileId = getProfileId(profileInfo);
 
     let profile = await fetchProfile(uid, profileId);
@@ -40,18 +48,10 @@ async function updateProfile(uid, profileInfo) {
         profile.name = profileInfo.name;
     }
 
-    const options = {
-        merge: true
-    }
-
-    return profileCollection(uid).doc(profileId).set(profile, options);
+    return saveProfile(uid, profileId, profile);
 }
 
 async function updateTrack(uid, trackInfo) {
-    if (typeof trackInfo.url !== 'string') {
-        return Promise.reject(new Error('track url must be a string'));
-    }
-
     await updateProfile(uid, trackInfo.uploaderInfo);
 
     const trackId = getTrackId(trackInfo)
@@ -65,18 +65,10 @@ async function updateTrack(uid, trackInfo) {
         track.name = trackInfo.name;
     }
 
-    const options = {
-        merge: true
-    }
-
-    return trackCollection(uid).doc(trackId).set(track, options);
+    return saveTrack(uid, trackId, track);
 }
 
 async function updateRepost(uid, repostInfo) {
-    if (typeof repostInfo.time !== 'number') {
-        return Promise.reject(new Error('repost time must be a number'));
-    }
-
     await updateProfile(uid, repostInfo.reposterInfo);
     await updateTrack(uid, repostInfo.trackInfo);
 
@@ -87,7 +79,7 @@ async function updateRepost(uid, repostInfo) {
         repost = createRepost(repostInfo);
     }
 
-    return repostCollection(uid).doc(repostId).set(repost);
+    return saveRepost(uid, repostId, repost);
 }
 
 function getProfileId(profileInfo) {
@@ -95,13 +87,13 @@ function getProfileId(profileInfo) {
 }
 
 function getTrackId(trackInfo) {
-    return trackInfo.uploaderInfo.url + ';' + trackInfo.url;
+    const uploaderId = getProfileId(trackInfo.uploaderInfo);
+    return uploaderId + ';' + trackInfo.url;
 }
 
 function getRepostId(repostInfo) {
     const reposterId = getProfileId(repostInfo.reposterInfo);
     const trackId = getTrackId(repostInfo.trackInfo);
-
     return reposterId + ';' + repostInfo.time + ';' + trackId;
 }
 
@@ -126,19 +118,43 @@ function createRepost(repostInfo) {
     };
 }
 
+function isValidProfileInfo(profileInfo) {
+    return typeof profileInfo.url === 'string';
+}
+
+function isValidTrackInfo(trackInfo) {
+    return typeof trackInfo.url === 'string'
+        && isValidProfileInfo(trackInfo.uploaderInfo);
+}
+
+function isValidRepostInfo(repostInfo) {
+    return typeof repostInfo.time === 'number'
+        && isValidProfileInfo(repostInfo.reposterInfo)
+        && isValidTrackInfo(repostInfo.trackInfo);
+}
+
 async function fetchProfile(uid, profileId) {
-    const profileDocument = await (profileCollection(uid).doc(profileId).get());
-    return profileDocument.data();
+    return fetchData(profileCollection(uid), profileId);
 }
 
 async function fetchTrack(uid, trackId) {
-    const trackDocument = await (trackCollection(uid).doc(trackId).get());
-    return trackDocument.data();
+    return fetchData(trackCollection(uid), trackId);
 }
 
 async function fetchRepost(uid, repostId) {
-    const repostDocument = await (repostCollection(uid).doc(repostId).get());
-    return repostDocument.data();
+    return fetchData(repostCollection(uid), repostId);
+}
+
+async function saveProfile(uid, profileId, profile) {
+    return saveDocumentWithMerge(profileCollection(uid), profileId, profile);
+}
+
+async function saveTrack(uid, trackId, track) {
+    return saveDocumentWithMerge(trackCollection(uid), trackId, track);
+}
+
+async function saveRepost(uid, repostId, repost) {
+    return saveDocumentWithMerge(repostCollection(uid), repostId, repost);
 }
 
 function profileCollection(uid) {
@@ -155,4 +171,17 @@ function repostCollection(uid) {
 
 function userCollection() {
     return admin.firestore().collection('users');
+}
+
+async function fetchData(collection, id) {
+    const document = await (collection.doc(id).get());
+    return document.data();
+}
+
+async function saveDocumentWithMerge(collection, id, document) {
+    const options = {
+        merge: true
+    }
+
+    collection.doc(id).set(document, options);
 }
