@@ -72,7 +72,7 @@ async function updateRepost(uid, repostInfo) {
     await updateProfile(uid, repostInfo.reposterInfo);
     await updateTrack(uid, repostInfo.trackInfo);
 
-    const repostId = getRepostId(repostInfo)
+    const repostId = getRepostId(repostInfo);
 
     let repost = await fetchRepost(uid, repostId);
     if (repost === undefined) {

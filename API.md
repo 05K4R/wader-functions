@@ -27,7 +27,7 @@ trackInfo: Object
 ```
 
 ## updateRepost
-Update a repost, or create it if it doesn't exist. Also updates or creates the corresponding track and reposter profile.
+Update a repost, or create it if it doesn't exist. Also updates or creates the corresponding track, reposter, and uploader profile.
 
 ### Input
 ```
