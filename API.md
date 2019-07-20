@@ -57,3 +57,12 @@ trackInfo: Object
         url: String
         name: String (optional)
 ```
+
+## getProfileScore
+Get the score for a profile. The score is calculated as follows: 2*[# great tracks] + [# good tracks] - [# bad tracks], or 0 if less than 20 tracks has been categorized for the profile.
+
+### Input
+```
+profileInfo: Object
+    url: String
+```

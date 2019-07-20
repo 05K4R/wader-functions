@@ -3,12 +3,14 @@ const admin = require('firebase-admin');
 
 admin.initializeApp();
 
-const validCategories = {
-    GREAT: 'great',
-    GOOD: 'good',
-    OKAY: 'okay',
-    BAD: 'bad'
+const Categories = {
+    GREAT: 2,
+    GOOD: 1,
+    OKAY: 0,
+    BAD: -1
 };
+
+const MINIMUM_TRACKS_FOR_SCORE = 20;
 
 exports.updateProfile = functions.https.onCall((data, context) => {
     const uid = context.auth.uid;
@@ -55,6 +57,13 @@ exports.setCategoryOnTrack = functions.https.onCall((data, context) => {
     } else {
         return setCategoryOnTrack(uid, category, trackInfo);
     }
+});
+
+exports.getProfileScore = functions.https.onCall((data, context) => {
+    const uid = context.auth.uid;
+    const profileInfo = data.profileInfo;
+
+    return getProfileScore(uid, profileInfo);
 });
 
 async function updateProfile(uid, profileInfo) {
@@ -115,6 +124,24 @@ async function setCategoryOnTrack(uid, category, trackInfo) {
     return saveTrack(uid, trackId, track);
 }
 
+async function getProfileScore(uid, profileInfo) {
+    const profileId = getProfileId(profileInfo);
+    const uploadedTracks = await fetchTracksUploadedByProfile(uid, profileId);
+    const repostedTracks = await fetchTracksRepostedByProfile(uid, profileId);
+
+    const allTracks = [...uploadedTracks, ...repostedTracks];
+
+    if (uploadedTracks.length + repostedTracks.length < MINIMUM_TRACKS_FOR_SCORE) {
+        return 0;
+    } else {
+        let score = 0;
+        allTracks.forEach(track => {
+            score += getTrackScore(track);
+        });
+        return score;
+    }
+}
+
 function getProfileId(profileInfo) {
     return profileInfo.url;
 }
@@ -131,7 +158,11 @@ function getRepostId(repostInfo) {
 }
 
 function getCategoryId(category) {
-    return validCategories[category.toUpperCase()];
+    return category.toUpperCase();
+}
+
+function getTrackScore(track) {
+    return Categories[track.category];
 }
 
 function createProfile(profileInfo) {
@@ -172,7 +203,20 @@ function isValidRepostInfo(repostInfo) {
 
 function isValidCategory(category) {
     return typeof category === 'string'
-        && validCategories.hasOwnProperty(category.toUpperCase())
+        && Categories.hasOwnProperty(category.toUpperCase())
+}
+
+async function fetchTracksUploadedByProfile(uid, profileId) {
+    return fetchMultipleEquals(trackCollection(uid), 'uploader', profileId);
+}
+
+async function fetchTracksRepostedByProfile(uid, profileId) {
+    const reposts = await fetchMultipleEquals(repostCollection(uid), 'reposter', profileId);
+    const fetchPromises = [];
+    reposts.forEach(repost => {
+        fetchPromises.push(fetchTrack(uid, repost.track));
+    })
+    return Promise.all(fetchPromises);
 }
 
 async function fetchProfile(uid, profileId) {
@@ -218,6 +262,11 @@ function userCollection() {
 async function fetchData(collection, id) {
     const document = await (collection.doc(id).get());
     return document.data();
+}
+
+async function fetchMultipleEquals(collection, attribute, id) {
+    const snapshot = await collection.where(attribute, '==', id).get();
+    return snapshot.docs.map(doc => doc.data());
 }
 
 async function saveDocumentWithMerge(collection, id, document) {
