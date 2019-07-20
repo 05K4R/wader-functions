@@ -3,6 +3,13 @@ const admin = require('firebase-admin');
 
 admin.initializeApp();
 
+const validCategories = {
+    GREAT: 'great',
+    GOOD: 'good',
+    OKAY: 'okay',
+    BAD: 'bad'
+};
+
 exports.updateProfile = functions.https.onCall((data, context) => {
     const uid = context.auth.uid;
     const profileInfo = data.profileInfo;
@@ -33,6 +40,20 @@ exports.updateRepost = functions.https.onCall((data, context) => {
         return updateRepost(uid, repostInfo);
     } else {
         return Promise.reject(new Error('invalid repostInfo'));
+    }
+});
+
+exports.setCategoryOnTrack = functions.https.onCall((data, context) => {
+    const uid = context.auth.uid;
+    const category = data.category;
+    const trackInfo = data.trackInfo;
+
+    if (!isValidCategory(category)) {
+        return Promise.reject(new Error('invalid category'));
+    } else if (!isValidTrackInfo(trackInfo)) {
+        return Promise.reject(new Error('invalid trackInfo'));
+    } else {
+        return setCategoryOnTrack(uid, category, trackInfo);
     }
 });
 
@@ -82,6 +103,18 @@ async function updateRepost(uid, repostInfo) {
     return saveRepost(uid, repostId, repost);
 }
 
+async function setCategoryOnTrack(uid, category, trackInfo) {
+    await updateTrack(uid, trackInfo);
+
+    const trackId = getTrackId(trackInfo);
+    const categoryId = getCategoryId(category);
+
+    const track = await fetchTrack(uid, trackId);
+    track.category = categoryId;
+
+    return saveTrack(uid, trackId, track);
+}
+
 function getProfileId(profileInfo) {
     return profileInfo.url;
 }
@@ -95,6 +128,10 @@ function getRepostId(repostInfo) {
     const reposterId = getProfileId(repostInfo.reposterInfo);
     const trackId = getTrackId(repostInfo.trackInfo);
     return reposterId + ';' + repostInfo.time + ';' + trackId;
+}
+
+function getCategoryId(category) {
+    return validCategories[category.toUpperCase()];
 }
 
 function createProfile(profileInfo) {
@@ -131,6 +168,11 @@ function isValidRepostInfo(repostInfo) {
     return typeof repostInfo.time === 'number'
         && isValidProfileInfo(repostInfo.reposterInfo)
         && isValidTrackInfo(repostInfo.trackInfo);
+}
+
+function isValidCategory(category) {
+    return typeof category === 'string'
+        && validCategories.hasOwnProperty(category.toUpperCase())
 }
 
 async function fetchProfile(uid, profileId) {
@@ -183,5 +225,5 @@ async function saveDocumentWithMerge(collection, id, document) {
         merge: true
     }
 
-    collection.doc(id).set(document, options);
+    return collection.doc(id).set(document, options);
 }

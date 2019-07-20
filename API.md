@@ -43,3 +43,17 @@ repostInfo: Object
             url: String
             name: String (optional)
 ```
+
+## setCategoryOnTrack
+Set a category on a track. A track can have at most one category, so if the track already has a category it is replaced. Also updates the corresponding track and uploader profile.
+
+### Input
+```
+category: String, valid values: great, good, okay, bad (case insensitive)
+trackInfo: Object
+    url: String
+    name: String (optional)
+    uploaderInfo: Object
+        url: String
+        name: String (optional)
+```
