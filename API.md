@@ -1,7 +1,6 @@
 # API Reference
 The following functions are documented for easy reference, and should be expected to change until version 1 of Wader Functions.
-At the moment, functions can only be called by a user that has signed in, so all references to *you* refers to that signed in user.
-All input and output uses JSON.
+All input and output is JSON.
 
 ## updateProfile
 Update a profile, or create it if it doesn't exist.
@@ -45,7 +44,7 @@ repostInfo: Object
 ```
 
 ## setCategoryOnTrack
-Set a category on a track. A track can have at most one category, so if the track already has a category it is replaced. Also updates the corresponding track and uploader profile.
+Set a category on a track. A track can have at most one category, if the track already has a category it is replaced. Also updates the corresponding track and uploader profile.
 
 ### Input
 ```
