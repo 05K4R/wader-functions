@@ -1,7 +1,7 @@
 # Changelog
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## Unreleased
+## 0.2.1 - 2019-08-10
 ### Fixed
 - Uncategorized tracks are no longer incorrectly counted towards the minimum track amount.
 
