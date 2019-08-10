@@ -130,12 +130,13 @@ async function getProfileScore(uid, profileInfo) {
     const repostedTracks = await fetchTracksRepostedByProfile(uid, profileId);
 
     const allTracks = [...uploadedTracks, ...repostedTracks];
+    const categorizedTracks = allTracks.filter(track => Categories[track.category] !== undefined);
 
-    if (uploadedTracks.length + repostedTracks.length < MINIMUM_TRACKS_FOR_SCORE) {
+    if (categorizedTracks.length < MINIMUM_TRACKS_FOR_SCORE) {
         return 0;
     } else {
         let score = 0;
-        allTracks.forEach(track => {
+        categorizedTracks.forEach(track => {
             score += getTrackScore(track);
         });
         return score;
