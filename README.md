@@ -8,3 +8,13 @@ Preview version available at the  [Chrome Web Store](https://chrome.google.com/w
 1. Follow step 1 in the [Firebase Cloud Functions get started guide](https://firebase.google.com/docs/functions/get-started).
 2. Type 'firebase login' into your console, and login to Firebase.
 3. Deploy your things with 'firebase deploy'!
+
+## Run Functions locally
+1. Install Firebase Tools
+```
+npm install -g firebase-tools
+```
+2. Start emulator
+```
+firebase emulators:start
+```
