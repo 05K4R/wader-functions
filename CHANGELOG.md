@@ -1,6 +1,10 @@
 # Changelog
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 0.3.0 - 2019-11-24
+### Changed
+- Changed category scores to great: 30, good: 20, okay: -1, bad: -20.
+
 ## 0.2.1 - 2019-08-10
 ### Fixed
 - Uncategorized tracks are no longer incorrectly counted towards the minimum track amount.

@@ -4,10 +4,10 @@ const admin = require('firebase-admin');
 admin.initializeApp();
 
 const Categories = {
-    GREAT: 2,
-    GOOD: 1,
-    OKAY: 0,
-    BAD: -1
+    GREAT: 30,
+    GOOD: 20,
+    OKAY: -1,
+    BAD: -20
 };
 
 const MINIMUM_TRACKS_FOR_SCORE = 20;
