@@ -10,6 +10,9 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/setup-java@master
+        with:
+          java-version: '11'
       - name: Checkout repo
         uses: actions/checkout@master
       - name: Run tests in Firebase emulator
