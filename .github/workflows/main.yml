@@ -16,3 +16,5 @@ jobs:
         uses: w9jds/firebase-action@master
         with:
           args: emulators:exec --only firestore 'npm test'
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
