@@ -1,0 +1,18 @@
+name: CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest;
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@master
+      - name: Run tests in Firebase emulator
+        uses: w9jds/firebase-action@master
+        with:
+          args: emulators:exec --only firestore 'npm test'
