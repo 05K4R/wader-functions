@@ -21,12 +21,6 @@ after(async () => {
 });
 
 describe("Wader Firestore backend", () => {
-    it("require users to log in before creating a profile", async() => {
-        const db = authedApp(null);
-        const profile = db.collection("users").doc("someone");
-        await firebase.assertFails(profile.set({ name: "Someone" }));
-    });
-
     it("can't create a track without an URL", async() => {
         const db = authedApp({ uid: "someone" });
         const profile = db.collection("users").doc("someone");
