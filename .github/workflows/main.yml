@@ -7,7 +7,7 @@ on:
     branches: [ master ]
 
 jobs:
-  Wader Functions tests:
+  build-and-test:
     runs-on: ubuntu-latest
     steps:
       - name: Setup Java
