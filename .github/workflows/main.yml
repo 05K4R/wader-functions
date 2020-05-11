@@ -24,4 +24,4 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@master
       - name: Run tests in Firebase emulator
-        run: firebase emulators:exec --only firestore 'npm test'
+        run: firebase emulators:exec --only firestore 'npm test' --token '${{ secrets.FIREBASE_TOKEN }}'
