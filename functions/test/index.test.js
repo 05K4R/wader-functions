@@ -21,31 +21,33 @@ after(async () => {
 });
 
 describe("Wader Firestore backend", () => {
-    it("can't create a track without an URL", async() => {
+    it("can read own data", async() => {
         const db = authedApp({ uid: "someone" });
         const profile = db.collection("users").doc("someone");
-        const track = profile.collection("tracks").doc("123;123")
-        await firebase.assertFails(track.set({ uploader: "uploader" }));
+        const document = profile.collection("development").doc("doc");
+        await document.set({ test: "test" });
+
+        await firebase.assertSucceeds(document.get());
     });
 
-    it("can't create a track without an uploader ID", async() => {
+    it("can't read other profiles data", async() => {
+        const db1 = authedApp({ uid: "someone" });
+        const profile1 = db1.collection("users").doc("someone");
+        const document1 = profile1.collection("development").doc("doc");
+        await document1.set({ test: "test" });
+
+        const db2 = authedApp({ uid: "someoneelse" });
+        const profile2 = db2.collection("users").doc("someone");
+        const document2 = profile2.collection("development").doc("doc");
+
+        await firebase.assertFails(document2.get());
+    });
+
+    it("can't write to arbitrary collection", async() => {
         const db = authedApp({ uid: "someone" });
         const profile = db.collection("users").doc("someone");
-        const track = profile.collection("tracks").doc("123;123")
-        await firebase.assertFails(track.set({ url: "trackurl" }));
-    });
+        const document = profile.collection("hello").doc("yoo");
 
-    it("can create a track with only uploader ID and URL", async() => {
-        const db = authedApp({ uid: "someone" });
-        const profile = db.collection("users").doc("someone");
-        const track = profile.collection("tracks").doc("123;123")
-        await firebase.assertSucceeds(track.set({ url: "trackurl", uploader: "uploader"}));
-    });
-
-    it("can only create a track in their own user data", async() => {
-        const db = authedApp({ uid: "someone" });
-        const profile = db.collection("users").doc("someoneelse");
-        const track = profile.collection("tracks").doc("123;123")
-        await firebase.assertFails(track.set({ url: "trackurl", uploader: "uploader"}));
+        await firebase.assertFails(document.set({ test: "nice" }));
     });
 });
