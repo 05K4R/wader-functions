@@ -7,10 +7,8 @@ service cloud.firestore {
                 allow read: if request.auth.uid == userId;
             }
 
-            match /tracks/{trackId} {
-                allow write: if request.auth.uid == userId
-                    && request.resource.data.url is string
-                    && request.resource.data.uploader is string
+            match /development/{anyItem} {
+                allow write: if request.auth.uid == userId;
             }
         }
     }
