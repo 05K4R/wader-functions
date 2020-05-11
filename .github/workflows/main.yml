@@ -7,14 +7,13 @@ on:
     branches: [ master ]
 
 jobs:
-  test:
+  Wader Functions tests:
     runs-on: ubuntu-latest
     steps:
       - name: Setup Java
         uses: actions/setup-java@master
         with:
           java-version: '11'
-          
       - name: Setup Node
         uses: actions/setup-node@v1
         with:
@@ -23,6 +22,9 @@ jobs:
         run: npm install -g firebase-tools
       - name: Checkout repo
         uses: actions/checkout@master
+      - name: Install Wader Functions
+        working-directory: ./functions
+        run: npm install
       - name: Run tests in Firebase emulator
         working-directory: ./functions
         run: firebase emulators:exec --only firestore 'npm test' --token '${{ secrets.FIREBASE_TOKEN }}'
