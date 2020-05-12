@@ -8,7 +8,11 @@ service cloud.firestore {
             }
 
             match /playlists/{playlistId} {
-                allow write: if request.auth.uid == userId;
+                allow write: if request.auth.uid == userId
+                    && request.resource.data.url is string
+                    && request.resource.data.url.size() > 0
+                    && request.resource.data.poster is string
+                    && request.resource.data.poster.size() > 0;
             }
 
             match /development/{anyItem} {

@@ -40,7 +40,7 @@ describe("Wader playlist security rules", () => {
         const otherUser = db.collection("users").doc(otherUserId);
         const otherUsersPlaylist = otherUser.collection("playlists").doc("list");
 
-        await firebase.assertFails(otherUsersPlaylist.set({ url: "test", profile: "test" }));
+        await firebase.assertFails(otherUsersPlaylist.set({ url: "test", poster: "test" }));
     });
 
     it("allows reading from the current user's playlists", async() => {
@@ -60,6 +60,61 @@ describe("Wader playlist security rules", () => {
         const user = db.collection("users").doc(userId);
         const playlist = user.collection("playlists").doc("list");
 
-        await firebase.assertSucceeds(playlist.set({ url: "test", profile: "test" }));
+        await firebase.assertSucceeds(playlist.set({ url: "test", poster: "test" }));
+    });
+
+    it("does not allow creating a playlist without an url", async() => {
+        const userId = "someone";
+        const playlistData = { poster: "poster" }
+
+        const db = authedApp({ uid: userId });
+        const user = db.collection("users").doc(userId);
+        const playlist = user.collection("playlists").doc("list");
+
+        await firebase.assertFails(playlist.set(playlistData));
+    });
+
+    it("does not allow creating a playlist with an empty url", async() => {
+        const userId = "someone";
+        const playlistData = { poster: "poster", url: "" }
+
+        const db = authedApp({ uid: userId });
+        const user = db.collection("users").doc(userId);
+        const playlist = user.collection("playlists").doc("list");
+
+        await firebase.assertFails(playlist.set(playlistData));
+    });
+
+    it("does not allow creating a playlist without a poster", async() => {
+        const userId = "someone";
+        const playlistData = { url: "url" }
+
+        const db = authedApp({ uid: userId });
+        const user = db.collection("users").doc(userId);
+        const playlist = user.collection("playlists").doc("list");
+
+        await firebase.assertFails(playlist.set(playlistData));
+    });
+
+    it("does not allow creating a playlist with an empty poster", async() => {
+        const userId = "someone";
+        const playlistData = { poster: "", url: "url" }
+
+        const db = authedApp({ uid: userId });
+        const user = db.collection("users").doc(userId);
+        const playlist = user.collection("playlists").doc("list");
+
+        await firebase.assertFails(playlist.set(playlistData));
+    });
+
+    it("allows creating a playlist with a poster and an url", async() => {
+        const userId = "someone";
+        const playlistData = { poster: "poster", url: "url" }
+
+        const db = authedApp({ uid: userId });
+        const user = db.collection("users").doc(userId);
+        const playlist = user.collection("playlists").doc("list");
+
+        await firebase.assertSucceeds(playlist.set(playlistData));
     });
 });
