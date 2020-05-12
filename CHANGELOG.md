@@ -1,6 +1,10 @@
 # Changelog
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## Unreleased
+### Removed
+- Arbitrary writes to a user's own collections.
+
 ## 0.3.0 - 2019-11-24
 ### Changed
 - Changed category scores to great: 30, good: 20, okay: -1, bad: -20.
