@@ -52,4 +52,14 @@ describe("Wader playlist security rules", () => {
 
         await firebase.assertSucceeds(playlist.get());
     });
+
+    it("allows writing to the current user's playlists", async() => {
+        const userId = "someone";
+
+        const db = authedApp({ uid: userId });
+        const user = db.collection("users").doc(userId);
+        const playlist = user.collection("playlists").doc("list");
+
+        await firebase.assertSucceeds(playlist.set({ url: "test", profile: "test" }));
+    });
 });

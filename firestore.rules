@@ -7,6 +7,10 @@ service cloud.firestore {
                 allow read: if request.auth.uid == userId;
             }
 
+            match /playlists/{playlistId} {
+                allow write: if request.auth.uid == userId;
+            }
+
             match /development/{anyItem} {
                 allow write: if request.auth.uid == userId;
             }
