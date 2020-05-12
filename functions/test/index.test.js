@@ -23,7 +23,6 @@ after(async () => {
 describe("Wader Firestore backend", () => {
     it("can read own data", async() => {
         const db = authedApp({ uid: "someone" });
-        
         const profile = db.collection("users").doc("someone");
         const document = profile.collection("development").doc("doc");
 
