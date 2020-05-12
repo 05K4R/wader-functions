@@ -25,7 +25,6 @@ describe("Wader Firestore backend", () => {
         const db = authedApp({ uid: "someone" });
         const profile = db.collection("users").doc("someone");
         const document = profile.collection("development").doc("doc");
-        await document.set({ test: "test" });
 
         await firebase.assertSucceeds(document.get());
     });
