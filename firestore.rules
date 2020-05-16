@@ -15,6 +15,15 @@ service cloud.firestore {
                     && request.resource.data.poster.size() > 0
                     && request.resource.data.tracks is list;
             }
+
+            match /playlistReposts/{repostId} {
+                allow write: if request.auth.uid == userId
+                    && request.resource.data.reposter is string
+                    && request.resource.data.reposter.size() > 0
+                    && request.resource.data.playlist is string
+                    && request.resource.data.playlist.size() > 0
+                    && request.resource.data.time is int;
+            }
         }
     }
 }
