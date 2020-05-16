@@ -14,10 +14,6 @@ service cloud.firestore {
                     && request.resource.data.poster is string
                     && request.resource.data.poster.size() > 0;
             }
-
-            match /development/{anyItem} {
-                allow write: if request.auth.uid == userId;
-            }
         }
     }
 }
