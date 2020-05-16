@@ -12,7 +12,8 @@ service cloud.firestore {
                     && request.resource.data.url is string
                     && request.resource.data.url.size() > 0
                     && request.resource.data.poster is string
-                    && request.resource.data.poster.size() > 0;
+                    && request.resource.data.poster.size() > 0
+                    && request.resource.data.tracks is list;
             }
         }
     }
