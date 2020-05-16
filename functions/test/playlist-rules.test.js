@@ -20,6 +20,14 @@ after(async () => {
   await Promise.all(firebase.apps().map(app => app.delete()));
 });
 
+function validPlaylistData() {
+    return {
+        poster: "poster",
+        url: "url",
+        tracks: []
+    };
+}
+
 describe("Wader playlist security rules", () => {
     it("does not allow reading from other user's playlists", async() => {
         const userId = "someone";
@@ -40,7 +48,7 @@ describe("Wader playlist security rules", () => {
         const otherUser = db.collection("users").doc(otherUserId);
         const otherUsersPlaylist = otherUser.collection("playlists").doc("list");
 
-        await firebase.assertFails(otherUsersPlaylist.set({ url: "test", poster: "test", tracks: [] }));
+        await firebase.assertFails(otherUsersPlaylist.set(validPlaylistData()));
     });
 
     it("allows reading from the current user's playlists", async() => {
@@ -60,12 +68,13 @@ describe("Wader playlist security rules", () => {
         const user = db.collection("users").doc(userId);
         const playlist = user.collection("playlists").doc("list");
 
-        await firebase.assertSucceeds(playlist.set({ url: "test", poster: "test", tracks: [] }));
+        await firebase.assertSucceeds(playlist.set(validPlaylistData()));
     });
 
     it("does not allow creating a playlist without an url", async() => {
         const userId = "someone";
-        const playlistData = { poster: "poster", tracks: [] };
+        const playlistData = validPlaylistData();
+        delete playlistData.url;
 
         const db = authedApp({ uid: userId });
         const user = db.collection("users").doc(userId);
@@ -76,7 +85,8 @@ describe("Wader playlist security rules", () => {
 
     it("does not allow creating a playlist with an empty url", async() => {
         const userId = "someone";
-        const playlistData = { poster: "poster", url: "", tracks: [] };
+        const playlistData = validPlaylistData();
+        playlistData.url = "";
 
         const db = authedApp({ uid: userId });
         const user = db.collection("users").doc(userId);
@@ -87,7 +97,8 @@ describe("Wader playlist security rules", () => {
 
     it("does not allow creating a playlist without a poster", async() => {
         const userId = "someone";
-        const playlistData = { url: "url", tracks: [] };
+        const playlistData = validPlaylistData();
+        delete playlistData.poster;
 
         const db = authedApp({ uid: userId });
         const user = db.collection("users").doc(userId);
@@ -98,7 +109,8 @@ describe("Wader playlist security rules", () => {
 
     it("does not allow creating a playlist with an empty poster", async() => {
         const userId = "someone";
-        const playlistData = { poster: "", url: "url", tracks: [] };
+        const playlistData = validPlaylistData();
+        playlistData.poster = "";
 
         const db = authedApp({ uid: userId });
         const user = db.collection("users").doc(userId);
@@ -107,19 +119,9 @@ describe("Wader playlist security rules", () => {
         await firebase.assertFails(playlist.set(playlistData));
     });
 
-    it("allows creating a playlist with a poster and an url", async() => {
-        const userId = "someone";
-        const playlistData = { poster: "poster", url: "url", tracks: [] };
-
-        const db = authedApp({ uid: userId });
-        const user = db.collection("users").doc(userId);
-        const playlist = user.collection("playlists").doc("list");
-
-        await firebase.assertSucceeds(playlist.set(playlistData));
-    });
-
     it("does not allow creating a playlist without a list for tracks", async() => {
-        const playlistData = { poster: "poster", url: "url" };
+        const playlistData = validPlaylistData();
+        delete playlistData.tracks;
 
         const db = authedApp({ uid: "someone" });
         const user = db.collection("users").doc("someone");
@@ -129,8 +131,8 @@ describe("Wader playlist security rules", () => {
     });
 
     it("allows creating a playlist with no track IDs", async() => {
-        const trackIds = [];
-        const playlistData = { poster: "poster", url: "url", tracks: trackIds};
+        const playlistData = validPlaylistData();
+        playlistData.tracks = [];
 
         const db = authedApp({ uid: "someone" });
         const user = db.collection("users").doc("someone");
@@ -140,8 +142,8 @@ describe("Wader playlist security rules", () => {
     });
 
     it("allows creating a playlist with one track ID", async() => {
-        const trackIds = ['track'];
-        const playlistData = { poster: "poster", url: "url", tracks: trackIds};
+        const playlistData = validPlaylistData();
+        playlistData.tracks = ['track'];
 
         const db = authedApp({ uid: "someone" });
         const user = db.collection("users").doc("someone");
@@ -151,8 +153,8 @@ describe("Wader playlist security rules", () => {
     });
 
     it("allows creating a playlist with multiple track IDs", async() => {
-        const trackIds = ['track1', 'track2'];
-        const playlistData = { poster: "poster", url: "url", tracks: trackIds};
+        const playlistData = validPlaylistData();
+        playlistData.tracks = ['track1, track2'];
 
         const db = authedApp({ uid: "someone" });
         const user = db.collection("users").doc("someone");
@@ -162,8 +164,8 @@ describe("Wader playlist security rules", () => {
     });
 
     it("does not allow creating a playlist with a string as track", async() => {
-        const tracks = 'track';
-        const playlistData = { poster: "poster", url: "url", tracks: tracks};
+        const playlistData = validPlaylistData();
+        playlistData.tracks = 'track';
 
         const db = authedApp({ uid: "someone" });
         const user = db.collection("users").doc("someone");
