@@ -128,8 +128,15 @@ async function getProfileScore(uid, profileInfo) {
     const profileId = getProfileId(profileInfo);
     const uploadedTracks = await fetchTracksUploadedByProfile(uid, profileId);
     const repostedTracks = await fetchTracksRepostedByProfile(uid, profileId);
+    const playlistTracks = await fetchTracksInPlaylistsPostedByProfile(uid, profileId);
+    const repostedPlaylistTracks = await fetchTracksInPlaylistsRepostedByProfile(uid, profileId);
 
-    const allTracks = [...uploadedTracks, ...repostedTracks];
+    const allTracks = [
+        ...uploadedTracks,
+        ...repostedTracks,
+        ...playlistTracks,
+        ...repostedPlaylistTracks
+    ];
     const categorizedTracks = allTracks.filter(track => Categories[track.category] !== undefined);
 
     if (categorizedTracks.length < MINIMUM_TRACKS_FOR_SCORE) {
@@ -220,6 +227,34 @@ async function fetchTracksRepostedByProfile(uid, profileId) {
     return Promise.all(fetchPromises);
 }
 
+async function fetchTracksInPlaylistsPostedByProfile(uid, profileId) {
+    const playlists = await fetchMultipleEquals(playlistCollection(uid), 'poster', profileId);
+    const fetchPromises = [];
+    playlists.forEach(playlist => {
+        playlist.tracks.forEach(track => {
+            fetchPromises.push(fetchTrack(uid, track));
+        });
+    });
+    return Promise.all(fetchPromises);
+}
+
+async function fetchTracksInPlaylistsRepostedByProfile(uid, profileId) {
+    const playlistReposts = await fetchMultipleEquals(playlistRepostCollection(uid), 'reposter', profileId);
+    const playlistFetchPromises = [];
+    playlistReposts.forEach(repost => {
+        playlistFetchPromises.push(fetchPlaylist(uid, repost.playlist))
+    });
+
+    const playlists = await Promise.all(playlistFetchPromises)
+    const trackFetchPromises = [];
+    playlists.forEach(playlist => {
+        playlist.tracks.forEach(track => {
+            trackFetchPromises.push(fetchTrack(uid, track));
+        });
+    });
+    return Promise.all(trackFetchPromises);
+}
+
 async function fetchProfile(uid, profileId) {
     return fetchData(profileCollection(uid), profileId);
 }
@@ -230,6 +265,10 @@ async function fetchTrack(uid, trackId) {
 
 async function fetchRepost(uid, repostId) {
     return fetchData(repostCollection(uid), repostId);
+}
+
+async function fetchPlaylist(uid, playlistId) {
+    return fetchData(playlistCollection(uid), playlistId);
 }
 
 async function saveProfile(uid, profileId, profile) {
@@ -254,6 +293,14 @@ function trackCollection(uid) {
 
 function repostCollection(uid) {
     return userCollection().doc(uid).collection('reposts');
+}
+
+function playlistCollection(uid) {
+    return userCollection().doc(uid).collection('playlists');
+}
+
+function playlistRepostCollection(uid) {
+    return userCollection().doc(uid).collection('playlistReposts');
 }
 
 function userCollection() {

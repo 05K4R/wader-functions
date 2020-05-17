@@ -6,6 +6,24 @@ service cloud.firestore {
             match /{anyCollection=**}/{anyItem} {
                 allow read: if request.auth.uid == userId;
             }
+
+            match /playlists/{playlistId} {
+                allow write: if request.auth.uid == userId
+                    && request.resource.data.url is string
+                    && request.resource.data.url.size() > 0
+                    && request.resource.data.poster is string
+                    && request.resource.data.poster.size() > 0
+                    && request.resource.data.tracks is list;
+            }
+
+            match /playlistReposts/{repostId} {
+                allow write: if request.auth.uid == userId
+                    && request.resource.data.reposter is string
+                    && request.resource.data.reposter.size() > 0
+                    && request.resource.data.playlist is string
+                    && request.resource.data.playlist.size() > 0
+                    && request.resource.data.time is int;
+            }
         }
     }
 }
