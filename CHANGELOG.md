@@ -2,6 +2,10 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## Unreleased
+### Added
+- Support for playlist and playlist repost writes.
+- Score for tracks in playlists and reposted playlists are now included in the score.
+
 ### Removed
 - Arbitrary writes to a user's own collections.
 
