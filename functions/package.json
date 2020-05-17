@@ -18,10 +18,9 @@
     "firebase-functions": "^3.6.1"
   },
   "devDependencies": {
-    "@firebase/testing": "^0.19.3",
-    "eslint": "^5.12.0",
-    "eslint-plugin-promise": "^4.0.1",
-    "firebase-functions-test": "^0.2.1",
+    "@firebase/testing": "^0.19.4",
+    "eslint": "^5.16.0",
+    "eslint-plugin-promise": "^4.2.1",
     "mocha": "^7.1.2"
   },
   "private": true
