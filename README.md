@@ -18,3 +18,8 @@ npm install -g firebase-tools
 ```
 firebase emulators:start
 ```
+
+## Run tests in emulator
+```
+firebase emulators:exec --only firestore 'npm test'
+```
