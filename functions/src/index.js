@@ -1,5 +1,5 @@
-const functions = require('firebase-functions');
-const admin = require('firebase-admin');
+const functions = require("firebase-functions");
+const admin = require("firebase-admin");
 
 admin.initializeApp();
 
@@ -19,7 +19,7 @@ exports.updateProfile = functions.https.onCall((data, context) => {
     if (isValidProfileInfo(profileInfo)) {
         return updateProfile(uid, profileInfo);
     } else {
-        return Promise.reject(new Error('invalid profileInfo'));
+        return Promise.reject(new Error("invalid profileInfo"));
     }
 });
 
@@ -30,7 +30,7 @@ exports.updateTrack = functions.https.onCall((data, context) => {
     if (isValidTrackInfo(trackInfo)) {
         return updateTrack(uid, trackInfo);
     } else {
-        return Promise.reject(new Error('invalid trackInfo'));
+        return Promise.reject(new Error("invalid trackInfo"));
     }
 });
 
@@ -41,7 +41,7 @@ exports.updateRepost = functions.https.onCall((data, context) => {
     if (isValidRepostInfo(repostInfo)) {
         return updateRepost(uid, repostInfo);
     } else {
-        return Promise.reject(new Error('invalid repostInfo'));
+        return Promise.reject(new Error("invalid repostInfo"));
     }
 });
 
@@ -51,9 +51,9 @@ exports.setCategoryOnTrack = functions.https.onCall((data, context) => {
     const trackInfo = data.trackInfo;
 
     if (!isValidCategory(category)) {
-        return Promise.reject(new Error('invalid category'));
+        return Promise.reject(new Error("invalid category"));
     } else if (!isValidTrackInfo(trackInfo)) {
-        return Promise.reject(new Error('invalid trackInfo'));
+        return Promise.reject(new Error("invalid trackInfo"));
     } else {
         return setCategoryOnTrack(uid, category, trackInfo);
     }
@@ -74,7 +74,7 @@ async function updateProfile(uid, profileInfo) {
         profile = createProfile(profileInfo);
     }
 
-    if (typeof profileInfo.name === 'string') {
+    if (typeof profileInfo.name === "string") {
         profile.name = profileInfo.name;
     }
 
@@ -91,7 +91,7 @@ async function updateTrack(uid, trackInfo) {
         track = createTrack(trackInfo)
     }
 
-    if (typeof trackInfo.name === 'string') {
+    if (typeof trackInfo.name === "string") {
         track.name = trackInfo.name;
     }
 
@@ -156,13 +156,13 @@ function getProfileId(profileInfo) {
 
 function getTrackId(trackInfo) {
     const uploaderId = getProfileId(trackInfo.uploaderInfo);
-    return uploaderId + ';' + trackInfo.url;
+    return uploaderId + ";" + trackInfo.url;
 }
 
 function getRepostId(repostInfo) {
     const reposterId = getProfileId(repostInfo.reposterInfo);
     const trackId = getTrackId(repostInfo.trackInfo);
-    return reposterId + ';' + repostInfo.time + ';' + trackId;
+    return reposterId + ";" + repostInfo.time + ";" + trackId;
 }
 
 function getCategoryId(category) {
@@ -195,31 +195,31 @@ function createRepost(repostInfo) {
 }
 
 function isValidProfileInfo(profileInfo) {
-    return typeof profileInfo.url === 'string';
+    return typeof profileInfo.url === "string";
 }
 
 function isValidTrackInfo(trackInfo) {
-    return typeof trackInfo.url === 'string'
+    return typeof trackInfo.url === "string"
         && isValidProfileInfo(trackInfo.uploaderInfo);
 }
 
 function isValidRepostInfo(repostInfo) {
-    return typeof repostInfo.time === 'number'
+    return typeof repostInfo.time === "number"
         && isValidProfileInfo(repostInfo.reposterInfo)
         && isValidTrackInfo(repostInfo.trackInfo);
 }
 
 function isValidCategory(category) {
-    return typeof category === 'string'
+    return typeof category === "string"
         && Categories.hasOwnProperty(category.toUpperCase())
 }
 
 async function fetchTracksUploadedByProfile(uid, profileId) {
-    return fetchMultipleEquals(trackCollection(uid), 'uploader', profileId);
+    return fetchMultipleEquals(trackCollection(uid), "uploader", profileId);
 }
 
 async function fetchTracksRepostedByProfile(uid, profileId) {
-    const reposts = await fetchMultipleEquals(repostCollection(uid), 'reposter', profileId);
+    const reposts = await fetchMultipleEquals(repostCollection(uid), "reposter", profileId);
     const fetchPromises = [];
     reposts.forEach(repost => {
         fetchPromises.push(fetchTrack(uid, repost.track));
@@ -228,7 +228,7 @@ async function fetchTracksRepostedByProfile(uid, profileId) {
 }
 
 async function fetchTracksInPlaylistsPostedByProfile(uid, profileId) {
-    const playlists = await fetchMultipleEquals(playlistCollection(uid), 'poster', profileId);
+    const playlists = await fetchMultipleEquals(playlistCollection(uid), "poster", profileId);
     const fetchPromises = [];
     playlists.forEach(playlist => {
         playlist.tracks.forEach(track => {
@@ -239,7 +239,7 @@ async function fetchTracksInPlaylistsPostedByProfile(uid, profileId) {
 }
 
 async function fetchTracksInPlaylistsRepostedByProfile(uid, profileId) {
-    const playlistReposts = await fetchMultipleEquals(playlistRepostCollection(uid), 'reposter', profileId);
+    const playlistReposts = await fetchMultipleEquals(playlistRepostCollection(uid), "reposter", profileId);
     const playlistFetchPromises = [];
     playlistReposts.forEach(repost => {
         playlistFetchPromises.push(fetchPlaylist(uid, repost.playlist))
@@ -284,27 +284,27 @@ async function saveRepost(uid, repostId, repost) {
 }
 
 function profileCollection(uid) {
-    return userCollection().doc(uid).collection('profiles');
+    return userCollection().doc(uid).collection("profiles");
 }
 
 function trackCollection(uid) {
-    return userCollection().doc(uid).collection('tracks');
+    return userCollection().doc(uid).collection("tracks");
 }
 
 function repostCollection(uid) {
-    return userCollection().doc(uid).collection('reposts');
+    return userCollection().doc(uid).collection("reposts");
 }
 
 function playlistCollection(uid) {
-    return userCollection().doc(uid).collection('playlists');
+    return userCollection().doc(uid).collection("playlists");
 }
 
 function playlistRepostCollection(uid) {
-    return userCollection().doc(uid).collection('playlistReposts');
+    return userCollection().doc(uid).collection("playlistReposts");
 }
 
 function userCollection() {
-    return admin.firestore().collection('users');
+    return admin.firestore().collection("users");
 }
 
 async function fetchData(collection, id) {
@@ -313,7 +313,7 @@ async function fetchData(collection, id) {
 }
 
 async function fetchMultipleEquals(collection, attribute, id) {
-    const snapshot = await collection.where(attribute, '==', id).get();
+    const snapshot = await collection.where(attribute, "==", id).get();
     return snapshot.docs.map(doc => doc.data());
 }
 
