@@ -12,7 +12,7 @@
     "start": "npm run shell",
     "deploy": "firebase deploy --only functions",
     "logs": "firebase functions:log",
-    "test": "mocha",
+    "test": "npm run build && mocha lib/test/**/*.test.js",
     "build": "npm run lint && tsc"
   },
   "dependencies": {
@@ -21,6 +21,7 @@
   },
   "devDependencies": {
     "@firebase/testing": "^0.19.4",
+    "@types/mocha": "^8.2.1",
     "@typescript-eslint/eslint-plugin": "^4.15.1",
     "@typescript-eslint/parser": "^4.15.1",
     "eslint": "^5.16.0",
