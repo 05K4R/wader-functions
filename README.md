@@ -21,6 +21,7 @@ firebase emulators:start
 ```
 
 ## Run tests in emulator
+While in the functions directory:
 ```
 firebase emulators:exec --only firestore 'npm test'
 ```
