@@ -211,7 +211,7 @@ function isValidRepostInfo(repostInfo) {
 
 function isValidCategory(category) {
     return typeof category === "string"
-        && Categories.hasOwnProperty(category.toUpperCase())
+        && Object.prototype.hasOwnProperty.call(Categories, category.toUpperCase())
 }
 
 async function fetchTracksUploadedByProfile(uid, profileId) {
