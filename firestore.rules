@@ -38,6 +38,15 @@ service cloud.firestore {
                     && request.resource.data.uploader is string
                     && request.resource.data.uploader.size() > 0;
             }
+
+            match /reposts/{repostId} {
+                allow write: if request.auth.uid == userId
+                    && request.resource.data.reposter is string
+                    && request.resource.data.reposter.size() > 0
+                    && request.resource.data.track is string
+                    && request.resource.data.track.size() > 0
+                    && request.resource.data.time is int;
+            }
         }
     }
 }
