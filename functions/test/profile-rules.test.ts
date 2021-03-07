@@ -21,14 +21,12 @@ after(async () => {
     await Promise.all(firebase.apps().map(app => app.delete()));
 });
 
-/*
-function validProfile() {
+function validProfileData() {
     return {
         url: "url",
         name: "Name"
     }
 }
-*/
 
 describe("Wader profile security rules", () => {
     it("does not allow reading from other user's profiles", async() => {
@@ -40,5 +38,60 @@ describe("Wader profile security rules", () => {
         const otherUsersProfile = otherUser.collection("profiles").doc("profile");
 
         await firebase.assertFails(otherUsersProfile.get());
+    });
+
+    it("does not allow riting to other user's profiles", async() => {
+        const userId = "someone";
+        const otherUserId = "someoneelse";
+
+        const db = authedFirestore(userId);
+        const otherUser = db.collection("users").doc(otherUserId);
+        const otherUsersProfile = otherUser.collection("profiles").doc("profile");
+
+        await firebase.assertFails(otherUsersProfile.set(validProfileData()));
+    });
+
+    it("allows reading from the current user's profiles", async() => {
+        const userId = "someone";
+
+        const db = authedFirestore(userId);
+        const user = db.collection("users").doc(userId);
+        const profile = user.collection("profiles").doc("profile");
+
+        await firebase.assertSucceeds(profile.get());
+    });
+
+    it("allows writing to the current user's profiles", async() => {
+        const userId = "someone";
+
+        const db = authedFirestore(userId);
+        const user = db.collection("users").doc(userId);
+        const profile = user.collection("profiles").doc("profile");
+
+        await firebase.assertSucceeds(profile.set(validProfileData()));
+    });
+
+    it("does not allow creating a profile without an url", async() => {
+        const userId = "someone";
+        const profileData: any = validProfileData();
+        delete profileData.url;
+
+        const db = authedFirestore(userId);
+        const user = db.collection("users").doc(userId);
+        const profile = user.collection("profiles").doc("profile");
+
+        await firebase.assertFails(profile.set(profileData));
+    });
+
+    it("does not allow creating a profile with an empty url", async() => {
+        const userId = "someone";
+        const profileData = validProfileData();
+        profileData.url = "";
+
+        const db = authedFirestore(userId);
+        const user = db.collection("users").doc(userId);
+        const profile = user.collection("profiles").doc("profile");
+
+        await firebase.assertFails(profile.set(profileData));
     });
 });
