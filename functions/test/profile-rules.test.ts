@@ -1,24 +1,16 @@
 import * as firebase from '@firebase/testing';
-import { readFileSync } from 'fs';
-
-const projectId = "wader-profile-testing";
-const rules = readFileSync("../firestore.rules", "utf-8");
-
-function authedFirestore(userId: string): firebase.firestore.Firestore {
-    const auth = { uid: userId }
-    return firebase.initializeTestApp({ projectId, auth }).firestore();
-}
+import * as ruleTestUtils from './rules-test-utils';
 
 beforeEach(async () => {
-    await firebase.clearFirestoreData({ projectId });
+    await ruleTestUtils.clearFirestore();
 });
 
 before(async () => {
-    await firebase.loadFirestoreRules({ projectId, rules });
+    await ruleTestUtils.loadRules();
 });
 
 after(async () => {
-    await Promise.all(firebase.apps().map(app => app.delete()));
+    await ruleTestUtils.clearApps();
 });
 
 function validProfileData() {
@@ -28,14 +20,23 @@ function validProfileData() {
     }
 }
 
+function profileDocument(userId: string) {
+    const database = ruleTestUtils.authedFirestore(userId);
+    return profileDocumentForDatabase(userId, database);
+}
+
+function profileDocumentForDatabase(userId: string, database: firebase.firestore.Firestore) {
+    const userDoc = database.collection("users").doc(userId);
+    return userDoc.collection("profiles").doc("profile");
+}
+
 describe("Wader profile security rules", () => {
     it("does not allow reading from other user's profiles", async() => {
         const userId = "someone";
         const otherUserId = "someoneelse";
 
-        const db = authedFirestore(userId);
-        const otherUser = db.collection("users").doc(otherUserId);
-        const otherUsersProfile = otherUser.collection("profiles").doc("profile");
+        const db = ruleTestUtils.authedFirestore(userId);
+        const otherUsersProfile = profileDocumentForDatabase(otherUserId, db);
 
         await firebase.assertFails(otherUsersProfile.get());
     });
@@ -44,9 +45,8 @@ describe("Wader profile security rules", () => {
         const userId = "someone";
         const otherUserId = "someoneelse";
 
-        const db = authedFirestore(userId);
-        const otherUser = db.collection("users").doc(otherUserId);
-        const otherUsersProfile = otherUser.collection("profiles").doc("profile");
+        const db = ruleTestUtils.authedFirestore(userId);
+        const otherUsersProfile = profileDocumentForDatabase(otherUserId, db);
 
         await firebase.assertFails(otherUsersProfile.set(validProfileData()));
     });
@@ -54,9 +54,7 @@ describe("Wader profile security rules", () => {
     it("allows reading from the current user's profiles", async() => {
         const userId = "someone";
 
-        const db = authedFirestore(userId);
-        const user = db.collection("users").doc(userId);
-        const profile = user.collection("profiles").doc("profile");
+        const profile = profileDocument(userId);
 
         await firebase.assertSucceeds(profile.get());
     });
@@ -64,9 +62,7 @@ describe("Wader profile security rules", () => {
     it("allows writing to the current user's profiles", async() => {
         const userId = "someone";
 
-        const db = authedFirestore(userId);
-        const user = db.collection("users").doc(userId);
-        const profile = user.collection("profiles").doc("profile");
+        const profile = profileDocument(userId);
 
         await firebase.assertSucceeds(profile.set(validProfileData()));
     });
@@ -76,9 +72,7 @@ describe("Wader profile security rules", () => {
         const profileData: any = validProfileData();
         delete profileData.url;
 
-        const db = authedFirestore(userId);
-        const user = db.collection("users").doc(userId);
-        const profile = user.collection("profiles").doc("profile");
+        const profile = profileDocument(userId);
 
         await firebase.assertFails(profile.set(profileData));
     });
@@ -88,9 +82,7 @@ describe("Wader profile security rules", () => {
         const profileData = validProfileData();
         profileData.url = "";
 
-        const db = authedFirestore(userId);
-        const user = db.collection("users").doc(userId);
-        const profile = user.collection("profiles").doc("profile");
+        const profile = profileDocument(userId);
 
         await firebase.assertFails(profile.set(profileData));
     });

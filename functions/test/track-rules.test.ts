@@ -1,24 +1,16 @@
 import * as firebase from '@firebase/testing';
-import { readFileSync } from 'fs';
-
-const projectId = "wader-track-testing";
-const rules = readFileSync("../firestore.rules", "utf-8");
-
-function authedFirestore(userId: string): firebase.firestore.Firestore {
-    const auth = { uid: userId }
-    return firebase.initializeTestApp({ projectId, auth }).firestore();
-}
+import * as ruleTestUtils from './rules-test-utils';
 
 beforeEach(async () => {
-    await firebase.clearFirestoreData({ projectId });
+    await ruleTestUtils.clearFirestore();
 });
 
 before(async () => {
-    await firebase.loadFirestoreRules({ projectId, rules });
+    await ruleTestUtils.loadRules();
 });
 
 after(async () => {
-    await Promise.all(firebase.apps().map(app => app.delete()));
+    await ruleTestUtils.clearApps();
 });
 
 function validTrackData() {
@@ -30,14 +22,14 @@ function validTrackData() {
     }
 }
 
+function trackDocument(userId: string) {
+    const database = ruleTestUtils.authedFirestore(userId);
+    return trackDocumentForDatabase(userId, database);
+}
+
 function trackDocumentForDatabase(userId: string, database: firebase.firestore.Firestore) {
     const userDoc = database.collection("users").doc(userId);
     return userDoc.collection("tracks").doc("track");
-}
-
-function trackDocument(userId: string) {
-    const database = authedFirestore(userId);
-    return trackDocumentForDatabase(userId, database);
 }
 
 describe("Wader track security rules", () => {
@@ -45,7 +37,7 @@ describe("Wader track security rules", () => {
         const userId = "someone";
         const otherUserId = "someoneelse";
 
-        const db = authedFirestore(userId);
+        const db = ruleTestUtils.authedFirestore(userId);
         const otherUsersTrack = trackDocumentForDatabase(otherUserId, db);
 
         await firebase.assertFails(otherUsersTrack.get());
@@ -55,7 +47,7 @@ describe("Wader track security rules", () => {
         const userId = "someone";
         const otherUserId = "someoneelse";
 
-        const db = authedFirestore(userId);
+        const db = ruleTestUtils.authedFirestore(userId);
         const otherUsersTrack = trackDocumentForDatabase(otherUserId, db);
 
         await firebase.assertFails(otherUsersTrack.set(validTrackData()));
