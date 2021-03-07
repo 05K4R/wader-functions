@@ -30,6 +30,14 @@ service cloud.firestore {
                     && request.resource.data.url is string
                     && request.resource.data.url.size() > 0;
             }
+
+            match /tracks/{trackId} {
+                allow write: if request.auth.uid == userId
+                    && request.resource.data.url is string
+                    && request.resource.data.url.size() > 0
+                    && request.resource.data.uploader is string
+                    && request.resource.data.uploader.size() > 0;
+            }
         }
     }
 }

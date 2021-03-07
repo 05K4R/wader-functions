@@ -40,7 +40,7 @@ describe("Wader profile security rules", () => {
         await firebase.assertFails(otherUsersProfile.get());
     });
 
-    it("does not allow riting to other user's profiles", async() => {
+    it("does not allow writing to other user's profiles", async() => {
         const userId = "someone";
         const otherUserId = "someoneelse";
 
