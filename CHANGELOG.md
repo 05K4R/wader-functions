@@ -1,6 +1,16 @@
 # Changelog
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 0.5.0 - 2021-07-17
+### Added
+- Support for profile, tracks, and repost writes.
+
+### Changed
+- Updated functions to Node 14.
+
+### Security
+- Updated dependencies.
+
 ## 0.4.0 - 2020-05-25
 ### Added
 - Support for playlist and playlist repost writes.
